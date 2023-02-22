@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
+const { generarToken } = require("../services/jwt");
 const pruebaUser = (req, res) => {
   return res.status(200).send({
     msg: "Mensaje desde User Controller",
@@ -91,7 +92,7 @@ const loginUsuario = (req, res) => {
         })
       }
       //* CONSEGUIR TOKEN
-      const token = false
+      const token = generarToken(user)
 
       //* DEVOLVER DATOS DEL USUARO
       return res.status(200).json({
