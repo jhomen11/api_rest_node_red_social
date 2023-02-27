@@ -3,7 +3,7 @@ const moment = require("moment");
 
 const SECRET = "CLAVE_SECRETA_RED_SOCIAL_0109";
 
-exports.generarToken = (user) => {
+const generarToken = (user) => {
     const payload ={
         id: user._id,
         name: user.name,
@@ -16,3 +16,8 @@ exports.generarToken = (user) => {
     }
     return jwt.encode(payload, SECRET)
 };
+
+module.exports = {
+    generarToken,
+    SECRET
+}

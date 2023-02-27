@@ -1,9 +1,11 @@
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const { generarToken } = require("../services/jwt");
+
 const pruebaUser = (req, res) => {
   return res.status(200).send({
     msg: "Mensaje desde User Controller",
+    user: req.user
   });
 };
 
@@ -101,6 +103,7 @@ const loginUsuario = (req, res) => {
         user: {
           id: user._id,
           name: user.name,
+          surname: user.surname,
           nick: user.nick
         },
         token
