@@ -1,11 +1,12 @@
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
+const mongoosePagination = require('mongoose-pagination')
 const { generarToken } = require("../services/jwt");
 
 const pruebaUser = (req, res) => {
   return res.status(200).send({
     msg: "Mensaje desde User Controller",
-    user: req.user
+    user: req.user,
   });
 };
 
@@ -67,7 +68,6 @@ const crearUsuario = async (req, res) => {
 const loginUsuario = (req, res) => {
   //* DATOS DEL REQUEST
   const { email, password } = req.body;
-  console.log(password);
   if (!email || !password) {
     return res.status(400).json({
       status: "error",
@@ -76,43 +76,88 @@ const loginUsuario = (req, res) => {
   }
 
   //* VERIFICAR SI EL USUARIO EXISTE EN LA DB
-  User.findOne({ email })
-    .exec((error, user) => {
-      if (error || !user) {
-        return res.status(400).json({
-          status: "error",
-          msg: "El usuario ingresado no existe",
-        });
-      }
-      //* COMPROBAR CONTRASEÑA
-      const pwd = bcrypt.compareSync(password, user.password)
-      console.log(pwd)
-      if(!pwd){
-        return res.status(400).json({
-          status: "error",
-          msg: "Usuario o contraseña incorrectos"
-        })
-      }
-      //* CONSEGUIR TOKEN
-      const token = generarToken(user)
-
-      //* DEVOLVER DATOS DEL USUARO
-      return res.status(200).json({
-        status: "ok",
-        msg: "Identificación Éxitosa",
-        user: {
-          id: user._id,
-          name: user.name,
-          surname: user.surname,
-          nick: user.nick
-        },
-        token
+  User.findOne({ email }).exec((error, user) => {
+    if (error || !user) {
+      return res.status(400).json({
+        status: "error",
+        msg: "El usuario ingresado no existe",
       });
+    }
+    //* COMPROBAR CONTRASEÑA
+    const pwd = bcrypt.compareSync(password, user.password);
+
+    if (!pwd) {
+      return res.status(400).json({
+        status: "error",
+        msg: "Usuario o contraseña incorrectos",
+      });
+    }
+    //* CONSEGUIR TOKEN
+    const token = generarToken(user);
+
+    //* DEVOLVER DATOS DEL USUARO
+    return res.status(200).json({
+      status: "ok",
+      msg: "Identificación Éxitosa",
+      user: {
+        id: user._id,
+        name: user.name,
+        surname: user.surname,
+        nick: user.nick,
+      },
+      token,
     });
+  });
 };
+
+const userProfile = (req, res) => {
+  const id = req.params.id
+  User.findById(id).select({password: 0, role:0, __v:0}).exec((error, user) =>{
+    if(error || !user){
+      return res.status(400).json({
+        status: "error",
+        msg: "El usuario ingresado no existe",
+      });
+    }
+    return res.status(200).json({
+      status: "ok",
+      user
+    })
+  }) 
+}
+
+const usersList = (req, res) => {
+  //* CONTROLAR LA PAGINA
+  let page = 1
+  req.params.page ? page = req.params.page : page
+  page = parseInt(page)
+
+  //* CONSULTAR CON MONGOOSE PAGINATE
+  const itemPerPage = 5
+  User.find().sort('_id').paginate(page, itemPerPage,(error, users, total) => {
+    if(error || !users) {
+      return res.status(404).json({
+        status: "error",
+        msg: "Error en la consulta",
+        error
+      });
+    }
+    //* DEVOLVER EL RESULTADO
+    return res.status(200).json({
+      status: "ok",
+      page,
+      itemPerPage,
+      total,
+      pages: Math.ceil(total/itemPerPage),
+      users
+    })
+  })
+}
 
 module.exports = {
   pruebaUser,
   crearUsuario,
   loginUsuario,
+  userProfile,
+  usersList
 };

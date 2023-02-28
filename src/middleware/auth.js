@@ -12,8 +12,8 @@ exports.auth = (req, res, netx) => {
   }
 
   //* LIMPIAR EL TOKEN
-
-  let token = req.headers.authorization.replace(/['"]+/g, "");
+  let token = req.headers.authorization.split(' ')[1];
+  
   try {
     let payload = jwt.decode(token, SECRET);
     //* DECODIFICAR EL TOKEN
@@ -24,6 +24,7 @@ exports.auth = (req, res, netx) => {
       });
     }
     req.user = payload;
+
   } catch (error) {
     return res.status(404).json({
       status: "error",
