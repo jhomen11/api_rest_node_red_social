@@ -10,6 +10,7 @@ const FollowSchema = Schema({
         ref: "User"
     },
     create_ad: {
+        type: Date,
         default: Date.now()
     }
 })
